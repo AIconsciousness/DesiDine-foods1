@@ -12,16 +12,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', adminAuth, (req, res) => {
-  res.json({ message: 'Restaurant created' });
-});
-
-router.put('/:id', adminAuth, (req, res) => {
-  res.json({ message: 'Restaurant updated' });
-});
-
-router.delete('/:id', adminAuth, (req, res) => {
-  res.json({ message: 'Restaurant deleted' });
-});
-
 module.exports = router; 
