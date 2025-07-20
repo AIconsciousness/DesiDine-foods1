@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,9 @@ export default function UPIPaymentScreen({ route, navigation }) {
   const [showUPIApps, setShowUPIApps] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [upiQrCode, setUpiQrCode] = useState('');
+  const [timer, setTimer] = useState(600); // 10 minutes in seconds
+  const timerRef = useRef();
+  const [timerExpired, setTimerExpired] = useState(false);
 
   useEffect(() => {
     // Generate UPI QR code URL using utility function
@@ -45,6 +48,53 @@ export default function UPIPaymentScreen({ route, navigation }) {
     );
     setUpiQrCode(upiUrl);
   }, [orderId, totalAmount]);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setTimerExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  const formatTime = (sec) => {
+    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const s = (sec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const checkPaymentStatus = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL || 'http://10.25.23.177:5000/api'}/payment/upi/status/${orderId}`
+      );
+      const result = await response.json();
+      if (result.success && result.payment.status === 'success') {
+        navigation.replace('PaymentSuccessScreen', {
+          order: orderDetails,
+          payment: {
+            transactionId: result.payment.transactionId,
+            amount: result.payment.amount,
+            timestamp: result.payment.timestamp,
+          },
+        });
+      } else if (result.success && result.payment.status === 'pending') {
+        Alert.alert('Payment Pending', 'Your payment is still pending. Please complete the payment in your UPI app.');
+      } else {
+        Alert.alert('Payment Failed', 'No successful payment detected for this order.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Unable to check payment status. Please try again.');
+    }
+    setIsProcessing(false);
+  };
 
   const handleUPIPayment = async (app = null) => {
     setIsProcessing(true);
@@ -101,46 +151,21 @@ export default function UPIPaymentScreen({ route, navigation }) {
         status,
         upiApp
       );
-      
-      if (result.success) {
-        setPaymentStatus(status);
-        
-        if (isSuccess) {
-          Alert.alert(
-            'Payment Successful! 🎉',
-            `Your payment of ₹${totalAmount} has been processed successfully.\nTransaction ID: ${transactionId}`,
-            [
-              {
-                text: 'Track Order',
-                onPress: () => navigation.navigate('OrderTracking', { orderId }),
-              },
-              {
-                text: 'Back to Home',
-                onPress: () => navigation.navigate('Home'),
-              },
-            ]
-          );
-        } else {
-          Alert.alert(
-            'Payment Failed',
-            'Your payment could not be processed. Please try again.',
-            [
-              {
-                text: 'Try Again',
-                onPress: () => {
-                  setPaymentStatus(null);
-                  setIsProcessing(false);
-                },
-              },
-              {
-                text: 'Cancel',
-                onPress: () => navigation.goBack(),
-              },
-            ]
-          );
-        }
+
+      if (result.success && status === 'success') {
+        // Fetch order details (optional: you can fetch from backend if needed)
+        navigation.replace('PaymentSuccessScreen', {
+          order: orderDetails,
+          payment: {
+            transactionId,
+            amount: totalAmount,
+            timestamp: new Date().toISOString(),
+          },
+        });
       } else {
-        throw new Error(result.message || 'Payment verification failed');
+        Alert.alert('Payment Failed', 'Your payment could not be processed. Please try again.');
+        setPaymentStatus('failed');
+        setIsProcessing(false);
       }
     } catch (error) {
       console.error('Payment verification error:', error);
@@ -326,8 +351,38 @@ export default function UPIPaymentScreen({ route, navigation }) {
                 color={paymentStatus === 'success' ? '#4CAF50' : '#F44336'}
               />
               <Text style={styles.statusText}>
-                {paymentStatus === 'success' ? 'Payment Successful!' : 'Payment Failed'}
+                {paymentStatus === 'success' ? 'Payment Successful! 🎉' : 'Payment Failed'}
               </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Timer and Payment Status Check */}
+        {timerExpired ? (
+          <View style={styles.section}>
+            <View style={styles.statusCard}>
+              <MaterialIcons name="error" size={32} color="#F44336" />
+              <Text style={styles.statusText}>
+                Payment timed out. Please try again or check your UPI app.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.payButton}
+              onPress={checkPaymentStatus}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.payButtonText}>I have paid / Check Payment Status</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Timer</Text>
+            <View style={styles.timerCard}>
+              <Text style={styles.timerText}>Time Remaining: {formatTime(timer)}</Text>
             </View>
           </View>
         )}
@@ -631,5 +686,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
     borderRadius: 12,
     marginBottom: 12,
+  },
+  timerCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  timerText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF6B6B',
   },
 }); 

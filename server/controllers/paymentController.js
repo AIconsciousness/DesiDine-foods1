@@ -65,7 +65,7 @@ exports.verifyUPIPayment = async (req, res) => {
       // Create new payment record
       payment = new Payment({
         order: orderId,
-        user: req.user?.id || 'anonymous',
+        user: req.user?.id, // anonymous न डालें
         amount: amount,
         provider: 'upi',
         status: status,
@@ -93,8 +93,17 @@ exports.verifyUPIPayment = async (req, res) => {
 
     await payment.save();
 
+    // Update order paymentStatus and status if payment is successful
+    if (status === 'success') {
+      const Order = require('../models/Order');
+      await Order.findOneAndUpdate(
+        { orderId: orderId },
+        { paymentStatus: 'paid', status: 'processing' }
+      );
+    }
+
     // Log payment attempt
-    console.log(`UPI Payment ${status}: Order ${orderId}, Amount: ₹${amount}, App: ${upiApp}`);
+    console.log(`UPI Payment ${status}: Order ${orderId}, Amount:  ǀ${amount}, App: ${upiApp}`);
 
     res.json({
       success: true,

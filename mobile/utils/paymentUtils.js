@@ -101,7 +101,7 @@ export const UPI_APPS = [
 
 // Merchant configuration
 export const MERCHANT_CONFIG = {
-  VPA: 'desidine@upi',
-  NAME: 'DesiDine',
+  VPA: '720921300372@axl',
+  NAME: 'kamlesh kumar sharma',
   CODE: '0000',
 }; 

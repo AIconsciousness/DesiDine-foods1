@@ -19,6 +19,7 @@ import EditAddressScreen from '../screens/EditAddressScreen';
 import PaymentMethodsScreen from '../screens/PaymentMethodsScreen';
 import FavoriteRestaurantsScreen from '../screens/FavoriteRestaurantsScreen';
 import UPIPaymentScreen from '../screens/UPIPaymentScreen';
+import PaymentSuccessScreen from '../screens/PaymentSuccessScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,6 +45,7 @@ export default function AppNavigator() {
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="FavoriteRestaurants" component={FavoriteRestaurantsScreen} />
         <Stack.Screen name="UPIPayment" component={UPIPaymentScreen} />
+        <Stack.Screen name="PaymentSuccessScreen" component={PaymentSuccessScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
