@@ -1,4 +1,4 @@
-const BASE_URL = 'http://10.36.44.177:5000/api'; // Change to your backend URL if needed
+const BASE_URL = 'https://desidine-foods1.onrender.com/api'; // Updated to Render backend URL
 
 export async function apiRequest(path, method = 'GET', body, token) {
   try {

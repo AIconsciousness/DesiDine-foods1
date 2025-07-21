@@ -1,6 +1,6 @@
 // UPI Payment Utility Functions
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://desidine-foods1.onrender.com/api';
 
 // Generate UPI URL for QR code
 export const generateUPIUrl = (merchantVPA, merchantName, orderId, amount, merchantCode = '0000') => {
