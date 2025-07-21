@@ -1,6 +1,6 @@
 [build]
   base = "mobile"
-  command = "npm run build:static"
+  command = "npm run build:web"
   publish = "web-build"
 
 [build.environment]
