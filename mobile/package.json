@@ -11,7 +11,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:web": "expo export:web"
+    "build:web": "expo export:web",
+    "build:web-alt": "expo export --platform web"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -33,7 +34,8 @@
     "react-native-web": "^0.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@expo/webpack-config": "^20.0.0"
   },
   "private": true
 }
